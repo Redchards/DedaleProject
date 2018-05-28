@@ -60,6 +60,9 @@ public class CollectorAgent extends AbstractAgent {
 					addLogEntry("my backpack is empty");
 					if(!dedale.isExplored())
 						strategy = Strategy.EXPLORATION;
+					else {
+						strategy = Strategy.RANDOM_WALK;
+					}
 				}
 			}else {
 				addLogEntry("fitting treasure room available : " + treasureRooms);

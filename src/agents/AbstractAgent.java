@@ -63,9 +63,14 @@ public abstract class AbstractAgent extends abstractAgent {
 
 	public static final long 	SLEEP_DURATION 						= 1000;
 	public static final long 	CYCLE_SPEED 						= 500;
+
+//	public static final long 	TIMEOUT_BTW_FAILED_MOVE 			= 10;
 	public static final long 	TIMEOUT_BTW_FAILED_MOVE 			= CYCLE_SPEED / FAILED_MOVE_MAX_ATTEMPT ;
 
-	public static final long 	WAIT_FOR_MESSAGE_DURATION 			= CYCLE_SPEED / 3;
+//	public static final long 	WAIT_FOR_MESSAGE_DURATION 			= 50 ;
+//	public static final long 	MESSAGE_TIMEOUT 					= 150;
+
+	public static final long 	WAIT_FOR_MESSAGE_DURATION 			= CYCLE_SPEED / 3 ;
 	public static final long 	MESSAGE_TIMEOUT 					= CYCLE_SPEED * 3;
 
 	public static final int 	BLOCKED_ROOM_TIMEOUT 				= 5;		// Nombre de cycle avant de débloquer une salle
@@ -318,16 +323,16 @@ public abstract class AbstractAgent extends abstractAgent {
 	// Return true if prioritary compare to the other agent.
 	public boolean computePriority(State agent) {
 		
-		// Si il ne fait rien, il n'est pas prioritaire, quoi qu'il arrive
-		if(strategy == Strategy.IDLE || plannedMoves.isEmpty() || isGoalReached())
+		if(strategy == Strategy.IDLE || plannedMoves.isEmpty() || bIsGoalReached)
 			return false;
+		
 
 		boolean	res		= false;
 		int		comp	= 0;
 
 		int 	myPriority 		= getPriority();
 		int 	agentPriority	= agent.priority;
-
+		
 		DeadlockState	myDeadlockState		= getDeadlockState();
 		DeadlockState	agentDeadlockState	= agent.deadlockState;
 		
@@ -516,6 +521,7 @@ public abstract class AbstractAgent extends abstractAgent {
 		addLogEntry(" 	Time : " + (LocalTime.now().toNanoOfDay() - startingTime)/1000000 + " milliseconds");
 		bIsGoalReached = true;
 		priority -= 1000;
+		forcePathPlanning();
 		System.out.println(getLocalName() + " : GOAL REACHED");
 		trace("GOAL REACHED", false);
 	}

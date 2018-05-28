@@ -144,8 +144,10 @@ public class Dedale implements Serializable {
 	public Set<String> getUnexploredRooms(Graph graph){
 		HashSet<String> unexploredRooms = new HashSet<String>();
 
-		for(Node node:graph.getEachNode()) 
-			if (!(boolean) node.getAttribute(NodeAttributes.HAS_BEEN_EXPLORED.toString())) unexploredRooms.add(node.getId());
+		for(Node node:graph.getEachNode()) {
+			if (!(boolean) node.getAttribute(NodeAttributes.HAS_BEEN_EXPLORED.toString()))
+				unexploredRooms.add(node.getId());
+		}
 
 		return unexploredRooms;
 	}
@@ -476,9 +478,9 @@ public class Dedale implements Serializable {
 	}
 
 	private Graph computeSubgraph(Set<String> excludedRooms) {
-		Graph subgraph = Graphs.clone(this.graph);
+		Graph subgraph = Graphs.clone(graph);
 		for(String excludedRoom:excludedRooms) {
-			if(!excludedRoom.isEmpty()) subgraph.removeNode(excludedRoom);
+			if(!excludedRoom.isEmpty() && graph.getNode(excludedRoom) != null) subgraph.removeNode(excludedRoom);
 		}
 		return subgraph;
 	}

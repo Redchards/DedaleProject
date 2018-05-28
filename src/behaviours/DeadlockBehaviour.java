@@ -31,6 +31,7 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 	private Outcome 		outcome;
 	private Stack<String> 	nextMoves;	// Stockage juste d'une salle, le but étant de réagir localement à un blocage, et voir si le planificateur global s'en sort
 	private int				solvingAttempt;
+	private String			lastPos;
 	private boolean			isIdle;
 
 	public DeadlockBehaviour(Agent a) {
@@ -39,6 +40,7 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 		nextMoves 		= new Stack<String>();
 		solvingAttempt 	= 0;
 		isIdle			= false;
+		lastPos			= "";
 	}
 
 	@Override
@@ -47,9 +49,7 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 		// ~~~~~~~~~~~~~~~~~~~~~
 		// ~~~~~ New cycle ~~~~~
 		// ~~~~~~~~~~~~~~~~~~~~~
-		solvingAttempt++;
-		nextMoves = new Stack<String>();
-		
+
 		// ~~~ THIS AGENT ~~~
 		String myPosition 		= myAgent.getCurrentRoom();
 		String myNextMove 		= myAgent.getNextMove();
@@ -65,6 +65,13 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 		Set<State> 	obstructedAgent		= new HashSet<State>();		// Les agents que je bloque
 		Set<String> occupiedRooms 		= new HashSet<String>(); 	// Salles occupées par les agents
 
+		if(!lastPos.equalsIgnoreCase(myPosition))
+			solvingAttempt = 0;
+		else
+			solvingAttempt++;
+			
+		nextMoves = new Stack<String>();
+		
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// ~~~~~ STEP I - FETCHING INFO ~~~~~
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -246,6 +253,8 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 			case NONE:
 				myAgent.setDeadlockState(DeadlockState.NONE);
 				break;
+		default:
+			break;
 		}
 
 		if (solvingAttempt >= AbstractAgent.FAILED_DEADLOCK_SOLVING_MAX_ATTEMPT) {
@@ -265,7 +274,7 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 
 		myAgent.addLogEntry("outcome 	: " + outcome);
 		myAgent.addLogEntry("state is 	: " + myAgent.getDeadlockState());
-		myAgent.addLogEntry("next moves are " + nextMoves);
+		myAgent.addLogEntry("next moves are " + myAgent.getPlannedMoves());
 
 		myAgent.trace(getBehaviourName(), false);
 		return true;
