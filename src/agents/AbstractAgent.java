@@ -319,7 +319,7 @@ public abstract class AbstractAgent extends abstractAgent {
 	public boolean computePriority(State agent) {
 		
 		// Si il ne fait rien, il n'est pas prioritaire, quoi qu'il arrive
-		if(strategy == Strategy.IDLE || plannedMoves.isEmpty())
+		if(strategy == Strategy.IDLE || plannedMoves.isEmpty() || isGoalReached())
 			return false;
 
 		boolean	res		= false;
