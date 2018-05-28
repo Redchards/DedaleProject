@@ -1,0 +1,49 @@
+node {
+	fill-color: grey;
+	size: 30px, 60px;
+	shape: rounded-box;
+	size-mode: fit;
+	text-size:14;
+	text-style:bold-italic;
+	text-color:white;
+}
+
+node.legend {
+	fill-color: black;
+	size: 1px;
+	text-size:18;
+	text-style:bold;
+	text-color:white;
+	text-background-mode:rounded-box;
+	text-background-color:black;
+}
+
+node.agent {
+	fill-color: blue;
+	size: 40px;
+	stroke-mode: plain;
+	stroke-width: 5px;
+	stroke-color: blue;
+}
+
+node.visited {
+	fill-color: black;
+}
+
+node.wumpus {
+	fill-color: red;
+	shape: cross;
+}
+
+node.treasure {
+	fill-color: yellow;
+	text-color: brown;
+}
+
+node.treasure_diamonds {
+	fill-color: rgb(66, 134, 244);
+}
+
+node.exit {
+	fill-color: green;
+}
