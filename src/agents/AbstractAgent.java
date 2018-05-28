@@ -60,13 +60,15 @@ public abstract class AbstractAgent extends abstractAgent {
 	public static final int 	FAILED_DEADLOCK_SOLVING_MAX_ATTEMPT = 3;		// Nombre de fois que le behaviour deadlock peut ne mener à aucun résultat avant un reset
 	public static final int 	FAILED_MOVE_BEHAVIOUR_MAX_ATTEMPT 	= 3;		// Nombre de fois que le behaviour move peut ne mener à aucun résultat avant un reset
 	public static final int 	FAILED_MOVE_MAX_ATTEMPT 			= 4;		// Nombre de fois qu'un movement peut échouer avant passer à une résolution d'interblocage
-	public static final int 	BLOCKED_ROOM_TIMEOUT 				= 5;		// Nombre de cycle avant de débloquer une salle
 
 	public static final long 	SLEEP_DURATION 						= 1000;
-	public static final long 	CYCLE_SPEED 						= 1;
-	public static final long 	TIMEOUT_BTW_FAILED_MOVE 			= 10;
-	public static final long 	WAIT_FOR_MESSAGE_DURATION 			= 50;
-	public static final long 	MESSAGE_TIMEOUT 					= 150;
+	public static final long 	CYCLE_SPEED 						= 500;
+	public static final long 	TIMEOUT_BTW_FAILED_MOVE 			= CYCLE_SPEED / FAILED_MOVE_MAX_ATTEMPT ;
+
+	public static final long 	WAIT_FOR_MESSAGE_DURATION 			= CYCLE_SPEED / 3;
+	public static final long 	MESSAGE_TIMEOUT 					= CYCLE_SPEED * 3;
+
+	public static final int 	BLOCKED_ROOM_TIMEOUT 				= 5;		// Nombre de cycle avant de débloquer une salle
 
 	public static final int 	COLLECTOR_BASE_PRIORITY 			= 100;
 	public static final int 	EXPLORATOR_BASE_PRIORITY 			= 10;
@@ -277,7 +279,7 @@ public abstract class AbstractAgent extends abstractAgent {
 
 		fsm.registerTransition(STATE_RECEIVE_HELLO		, STATE_RECEIVE_HELLO		, AbstractReceiveMessageBehaviour.Outcome.MESSAGE_RECEIVED.getValue());
 		fsm.registerTransition(STATE_RECEIVE_HELLO		, STATE_SEND_DEDALE			, AbstractReceiveMessageBehaviour.Outcome.NO_MORE_MESSAGE.getValue());
-		fsm.registerTransition(STATE_RECEIVE_HELLO		, STATE_PLANNING			, AbstractReceiveMessageBehaviour.Outcome.NO_MESSAGE.getValue());		// Si on a pas reçu de message, on vérifie tout de même que il y une map (L'information contenu dans le hello n'est plus utile, mais pour la map oui)
+		fsm.registerTransition(STATE_RECEIVE_HELLO		, STATE_PLANNING			, AbstractReceiveMessageBehaviour.Outcome.NO_MESSAGE.getValue());
 
 		fsm.registerDefaultTransition(STATE_SEND_DEDALE	, STATE_RECEIVE_DEDALE);
 
@@ -288,20 +290,21 @@ public abstract class AbstractAgent extends abstractAgent {
 		fsm.registerDefaultTransition(STATE_PLANNING		, STATE_MOVE);
 
 		fsm.registerDefaultTransition(STATE_MOVE		, STATE_OBSERVE);
-		fsm.registerTransition(STATE_MOVE				, STATE_MOVE				, MoveBehaviour.Outcome.FAILED.getValue());
 		fsm.registerTransition(STATE_MOVE				, STATE_OBSERVE				, MoveBehaviour.Outcome.SUCCESS.getValue());
+		fsm.registerTransition(STATE_MOVE				, STATE_SEND_STATE			, MoveBehaviour.Outcome.IDLE.getValue());
+		fsm.registerTransition(STATE_MOVE				, STATE_SEND_STATE			, MoveBehaviour.Outcome.FAILED.getValue());
 		fsm.registerTransition(STATE_MOVE				, STATE_SEND_STATE			, MoveBehaviour.Outcome.DEADLOCK.getValue());
-		fsm.registerTransition(STATE_MOVE				, STATE_RECEIVE_STATE		, MoveBehaviour.Outcome.IDLE.getValue());
+		fsm.registerTransition(STATE_MOVE				, STATE_OBSERVE				, MoveBehaviour.Outcome.RESET.getValue());
 
 		fsm.registerDefaultTransition(STATE_SEND_STATE	, STATE_RECEIVE_STATE);
 
 		fsm.registerTransition(STATE_RECEIVE_STATE		, STATE_RECEIVE_STATE		, AbstractReceiveMessageBehaviour.Outcome.MESSAGE_RECEIVED.getValue());
 		fsm.registerTransition(STATE_RECEIVE_STATE		, STATE_DEADLOCK			, AbstractReceiveMessageBehaviour.Outcome.NO_MORE_MESSAGE.getValue());
-		fsm.registerTransition(STATE_RECEIVE_STATE		, STATE_DEADLOCK			, AbstractReceiveMessageBehaviour.Outcome.NO_MESSAGE.getValue());		// Si on a pas reçu de message, on vérifie tout de même que il y une map (L'information contenu dans le hello n'est plus utile, mais pour la map oui)
+		fsm.registerTransition(STATE_RECEIVE_STATE		, STATE_DEADLOCK			, AbstractReceiveMessageBehaviour.Outcome.NO_MESSAGE.getValue());
 
 		fsm.registerDefaultTransition(STATE_DEADLOCK	, STATE_MOVE);
 		fsm.registerTransition(STATE_DEADLOCK			, STATE_OBSERVE				, DeadlockBehaviour.Outcome.RESET.getValue());
-		
+		fsm.registerTransition(STATE_DEADLOCK			, STATE_OBSERVE				, DeadlockBehaviour.Outcome.NONE.getValue());
 	}
 
 	// ==========================
@@ -383,7 +386,7 @@ public abstract class AbstractAgent extends abstractAgent {
 		else
 			return "";
 	}
-
+	
 	public void movedTo(String position) {
 		dedale.moveTo(position);
 		deadlockState = DeadlockState.getDefault();
@@ -508,6 +511,7 @@ public abstract class AbstractAgent extends abstractAgent {
 		addLogEntry(" 	Time : " + (LocalTime.now().toNanoOfDay() - startingTime)/1000000 + " milliseconds");
 		bIsGoalReached = true;
 		priority -= 1000;
+		System.out.println(getLocalName() + " : GOAL REACHED");
 		trace("GOAL REACHED", false);
 	}
 	// =======================================================
@@ -612,7 +616,7 @@ public abstract class AbstractAgent extends abstractAgent {
 	private void writeToFile(String s, boolean append) {
 		try {
 			if(bTrace) {
-				PrintWriter pw = new PrintWriter(new FileWriter(logFileName, append), true);
+				PrintWriter pw = new PrintWriter(new FileWriter(logFileName + ".log", append), true);
 				pw.println(s);
 				pw.close();
 			}
@@ -629,6 +633,7 @@ public abstract class AbstractAgent extends abstractAgent {
 	// 		SOFT_BLOCKED 	- Can move localy, but won't solve the deadlock
 	// 		HARD_BLOCKED 	- Cannot move at all
 	public enum DeadlockState {
+		NONE("NONE"),
 		UNKNOWN("UNKNOWN"),
 		ALTERNATIVE("ALTERNATIVE"),
 		SOFT_BLOCKED("SOFT_BLOCKED"),
@@ -899,7 +904,7 @@ public abstract class AbstractAgent extends abstractAgent {
 	}
 
 	public Set<String> getBlockedRooms() {
-		return blockedRooms.keySet();
+		return new HashSet<String>(blockedRooms.keySet());
 	}
 
 	public String getObjective() {

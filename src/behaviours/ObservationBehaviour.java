@@ -2,6 +2,7 @@ package behaviours;
 
 import java.util.List;
 
+import agents.AbstractAgent;
 import env.Attribute;
 import env.Couple;
 import jade.core.Agent;
@@ -34,6 +35,7 @@ public class ObservationBehaviour extends AbstractFSMBehaviour {
 		Dedale dedale 		= myAgent.getDedale();
 		
 		myAgent.newCycle();
+		block(AbstractAgent.CYCLE_SPEED);
 
 		myAgent.addLogEntry("cycle        : " + myAgent.getCycleCounter());
 		myAgent.addLogEntry("observing at : " + myPosition);

@@ -39,10 +39,11 @@ public class CollectorAgent extends AbstractAgent {
 	
 	@Override
 	public Strategy computeStrategy() {
-		Map<String, Integer> treasureRooms = new HashMap<String, Integer>();
-		treasureRooms = dedale.getTreasureRooms(getTreasureType());
-		treasureRooms.remove(getCurrentRoom());
-		treasureRooms.keySet().removeAll(blockedRooms.keySet());
+		Map<String, Integer> 	treasureRooms = new HashMap<String, Integer>();
+		Set<String> 			excludedRooms = getBlockedRooms();
+		excludedRooms.add(getCurrentRoom());
+
+		treasureRooms = dedale.getTreasureRooms(getTreasureType(), excludedRooms);
 
 		int remainingFreeSpace 	= getBackPackFreeSpace();
 		int backpackCapacity   	= getBackpackCapacity();
@@ -110,7 +111,7 @@ public class CollectorAgent extends AbstractAgent {
 				strategy = Strategy.EXPLORATION;
 			}else {
 				Set<String> rooms = dedale.getNodeNeighbours(pos);
-				rooms.removeAll(blockedRooms.keySet());
+				rooms.removeAll(getBlockedRooms());
 				objective = Dedale.randomNode(rooms);
 				strategy = Strategy.GOTO;
 			}

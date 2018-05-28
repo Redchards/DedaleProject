@@ -12,8 +12,9 @@ public class MoveBehaviour extends AbstractFSMBehaviour {
 		NONE(-1),
 		FAILED(0),
 		SUCCESS(1),
-		DEADLOCK(2),
-		IDLE(3);
+		IDLE(2),
+		DEADLOCK(3),
+		RESET(4);
 
 		private int value;
 		private Outcome(int value) { this.value = value; }
@@ -37,7 +38,10 @@ public class MoveBehaviour extends AbstractFSMBehaviour {
 
 		if(myAgent.getCurrentStrategy() == Strategy.IDLE || plannedMove.isEmpty()) {
 			myAgent.addLogEntry("idle");
-			outcome = Outcome.IDLE; 
+			if(myAgent.getSendingMapToAgents().isEmpty())
+				outcome = Outcome.IDLE; 
+			else
+				outcome = Outcome.DEADLOCK;
 			return;
 		}
 
@@ -54,7 +58,7 @@ public class MoveBehaviour extends AbstractFSMBehaviour {
 				bHasMoved = myAgent.moveTo(plannedMove);
 				if(!bHasMoved) {
 					failedMove += 1;
-					myAgent.doWait(AbstractAgent.TIMEOUT_BTW_FAILED_MOVE);
+					block(AbstractAgent.TIMEOUT_BTW_FAILED_MOVE);
 				}else {
 					failedCounter = 0;
 					myAgent.addLogEntry("success");
@@ -68,11 +72,10 @@ public class MoveBehaviour extends AbstractFSMBehaviour {
 
 	@Override
 	public boolean done() {
-		if(failedCounter >= AbstractAgent.FAILED_MOVE_BEHAVIOUR_MAX_ATTEMPT && outcome != Outcome.SUCCESS) {
+		if(failedCounter >= AbstractAgent.FAILED_MOVE_BEHAVIOUR_MAX_ATTEMPT && outcome != Outcome.SUCCESS && outcome != Outcome.IDLE) {
 			failedCounter = 0;
-			outcome = Outcome.DEADLOCK;
+			outcome = Outcome.RESET;
 		}
-
 		myAgent.trace(getBehaviourName(), false);
 		return true;
 	}

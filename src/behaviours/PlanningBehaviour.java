@@ -64,6 +64,7 @@ public class PlanningBehaviour extends AbstractFSMBehaviour {
 
 		}else {
 			myAgent.addLogEntry("no planning needed"); 
+			myAgent.addLogEntry("strategy used : " + myAgent.getCurrentStrategy());
 			myAgent.addLogEntry("planned moves : " + myAgent.getPlannedMoves());
 		}
 	}

@@ -32,7 +32,6 @@ node.visited {
 
 node.wumpus {
 	fill-color: red;
-	shape: cross;
 }
 
 node.treasure {

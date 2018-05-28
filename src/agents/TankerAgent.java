@@ -31,6 +31,10 @@ public class TankerAgent extends AbstractAgent {
 
 	@Override
 	public boolean isGoalReached() {
+		if( dedale.isExplored() ){
+			if(bIsGoalReached == false) goalReached();
+			return true;
+		}
 		return false;
 	}
 }

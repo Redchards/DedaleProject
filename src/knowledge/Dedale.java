@@ -137,6 +137,10 @@ public class Dedale implements Serializable {
 		return getUnexploredRooms(graph);
 	}
 
+	public Set<String> getUnexploredRooms(Set<String> excludedRooms){
+		return getUnexploredRooms(computeSubgraph(excludedRooms));
+	}
+
 	public Set<String> getUnexploredRooms(Graph graph){
 		HashSet<String> unexploredRooms = new HashSet<String>();
 
@@ -148,6 +152,10 @@ public class Dedale implements Serializable {
 
 	public Map<String, Integer> getTreasureRooms(TreasureType type){
 		return getTreasureRooms(graph, type);
+	}
+
+	public Map<String, Integer> getTreasureRooms(TreasureType type, Set<String> excludedRooms){
+		return getTreasureRooms(computeSubgraph(excludedRooms), type);
 	}
 	
 	public Map<String, Integer> getTreasureRooms(Graph graph, TreasureType type){
@@ -391,41 +399,41 @@ public class Dedale implements Serializable {
 	 * @return 				Salle d'arrivée si il y en a une, vide sinon
 	 */
 	public Set<String> getParkingRoom(String from, Set<String> excludedRooms){
-		Set<String> candidates = new HashSet<String>();
+		if(graph.getNode(from) != null)
+			return getParkingRoom(computeSubgraph(excludedRooms), from);
+		return new HashSet<String>();
+	}
 
-		if(graph.getNode(from) == null) return candidates;
-
-		candidates = getNodeNeighbours(from);
-		candidates.removeAll(excludedRooms);
-
-		return candidates;
+	public Set<String> getParkingRoom(Graph graph, String from){
+		if(graph.getNode(from) == null)
+			return new HashSet<String>();
+		return getNodeNeighbours(graph, from);
 	}
 
 	/**
-	 * @param from			Salle de départ
+	 * @param from				Salle de départ
 	 * @param plan				Chemin dont on doit libérer le passage 
 	 * @param excludedRooms		Salle où l'on ne peut pas stationner
 	 * @return					Le chemin pour accéder à une salle de stationnement (la plus proche, aléatoire parmi si équivalente, probablement libre), vide sinon
 	 */
+	@SuppressWarnings("unchecked")
 	public Stack<String> getPathToParkingRoom(String from, Stack<String> plan, Set<String> excludedRooms){
 		
-		@SuppressWarnings("unchecked")
-		Stack<String> 	_plan 			= (Stack<String>) plan.clone();								// Le chemin que l'on doit libérer
-		@SuppressWarnings("unchecked")
-		Set<String> 	_excludedRooms 	= (Set<String>) ((HashSet<String>)excludedRooms).clone();	// Les salles où l'on ne peut pas stationner
+		Stack<String> 	_plan 			= (Stack<String>) plan.clone();		  			// Le chemin que l'on doit libérer
+		Set<String> 	_excludedRooms 	= new HashSet<String>(excludedRooms); 	// Les salles où l'on ne peut pas stationner
+		_plan.addAll(plan);
 
 		Stack<String> 	path 		= new Stack<String>();			// Le chemin pour accéder à la salle de stationnement
 		Set<String> 	candidates	= new HashSet<String>();		// Les salles où l'agent pourrait potentiellement stationné
 
-		String			id			= null;							// Variables d'itération
 		while(candidates.isEmpty() && !_plan.isEmpty()) {			// Tant qu'on a pas une place de stationnement à chaque point du chemin
-			id = _plan.pop();
+			String id = _plan.pop();
 			candidates = getParkingRoom(id, _excludedRooms);
 			_excludedRooms.add(id);									// La salle précédente du chemin ne doit pas être vue comme une salle potentielle, puisque l'agent doit libérer le chemin
 		}
 
 		if(!candidates.isEmpty())
-			path = this.getShortestPathFromTo(from, randomNode(candidates));
+			path = getShortestPathFromTo(from, randomNode(candidates), excludedRooms);
 
 		return path; 
 	}
