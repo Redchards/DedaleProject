@@ -199,13 +199,17 @@ public class Dedale implements Serializable {
 
 	public Stack<String> getRandomWalk(Graph graph, String from){
 		Stack<String> 	path 	= new Stack<String>();
-		Set<String> neighbours 	= getNodeNeighbours(graph, from);
 			
-		if(neighbours.isEmpty())
-			return path;
+		path = getShortestPathFromTo(graph, from, Toolkit.randomNode(graph).getId());
+		if(path.isEmpty()) {
+			Set<String> neighbours 	= getNodeNeighbours(graph, from);
 
-		path.push(Dedale.randomNode(neighbours));
+			if(neighbours.isEmpty())
+				return path;
+			path.push(Dedale.randomNode(neighbours));
+		}
 		return path;
+			
 	}
 
 	public Stack<String> getShortestPathForExploration(String from){
@@ -264,25 +268,23 @@ public class Dedale implements Serializable {
 	public Stack<String> getShortestPathForTreasureHunt(Graph graph, String from, TreasureType treasureType, int freeSpace, int capacity){
 		Stack<String> 	path 				= new Stack<String>();
 
-		Map<String, Integer> treasureRooms 	= new HashMap<String, Integer>();
-		treasureRooms = getTreasureRooms(graph, treasureType);
+		Map<String, Integer> treasureRooms = getTreasureRooms(graph, treasureType);
 		treasureRooms.remove(from);
 
 		TreeMap<Integer, String> optimalRooms = new TreeMap<Integer, String>();
 		for(Map.Entry<String, Integer> treasureRoom:treasureRooms.entrySet()) {
 			String 	id 		= treasureRoom.getKey();
 			int		value	= treasureRoom.getValue();
-			if(value <= freeSpace || freeSpace == capacity) {
+
+			if(value <= freeSpace || freeSpace == capacity)
 				optimalRooms.put(Math.abs(value-freeSpace),id);	// La salle dont la valeur se rapproche le plus de la capacité restante
-			}
 		}
 		
 		// Triage des salles optimales voisines
 		TreeMap<Integer, String> neighbourOptimalRooms = new TreeMap<Integer, String>();
 		for(Map.Entry<Integer, String> optimalRoom:optimalRooms.entrySet()) {
-			if(getNodeNeighbours(graph, from).contains(optimalRoom.getValue())) {
+			if(getNodeNeighbours(graph, from).contains(optimalRoom.getValue()))
 				neighbourOptimalRooms.put(optimalRoom.getKey(), optimalRoom.getValue());
-			}
 		}
 
 		// Si des salles optimales sont des salles voisines, se diriger vers la meilleure
@@ -295,7 +297,6 @@ public class Dedale implements Serializable {
 			pos = optimalRooms.get(optimalRooms.firstKey());
 			path = getShortestPathFromTo(graph, from, pos);
 		}
-		
 		return path;
 	}
 

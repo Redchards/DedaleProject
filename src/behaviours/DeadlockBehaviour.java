@@ -79,9 +79,10 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 			String agentNextMove 	= nearAgent.nextMove;
 
 			myAgent.addLogEntry("    " + agentName + " is near me, at : " + agentPos);
+			
+			occupiedRooms.add(agentPos);
 
 			if(myAgent.isNextToMe(agentPos)) {
-				occupiedRooms.add(agentPos);
 				myAgent.addLogEntry("        " + agentName + " is adjacent to me");
 
 				if(agentPos.equals(myNextMove)) {
@@ -259,6 +260,8 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 		}
 
 		myAgent.overrideNextMoves((nextMoves.isEmpty()) ? myAgent.getPlannedMoves() : nextMoves);
+
+		myAgent.clearKnownNearAgents();
 
 		myAgent.addLogEntry("outcome 	: " + outcome);
 		myAgent.addLogEntry("state is 	: " + myAgent.getDeadlockState());

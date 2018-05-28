@@ -52,12 +52,13 @@ public class MoveBehaviour extends AbstractFSMBehaviour {
 		while(outcome == Outcome.NONE) {
 			if(failedMove >= AbstractAgent.FAILED_MOVE_MAX_ATTEMPT) {
 				failedCounter++;
-				myAgent.addLogEntry("failed");
+				myAgent.addLogEntry("failed too many times");
 				outcome = Outcome.FAILED;
 			}else {
 				bHasMoved = myAgent.moveTo(plannedMove);
 				if(!bHasMoved) {
 					failedMove += 1;
+					myAgent.addLogEntry("failed");
 					block(AbstractAgent.TIMEOUT_BTW_FAILED_MOVE);
 				}else {
 					failedCounter = 0;

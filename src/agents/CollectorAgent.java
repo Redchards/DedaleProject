@@ -1,6 +1,5 @@
 package agents;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -39,50 +38,50 @@ public class CollectorAgent extends AbstractAgent {
 	
 	@Override
 	public Strategy computeStrategy() {
-		Map<String, Integer> 	treasureRooms = new HashMap<String, Integer>();
-		Set<String> 			excludedRooms = getBlockedRooms();
-		excludedRooms.add(getCurrentRoom());
+		if(isGoalReached()) {
+			strategy = Strategy.RANDOM_WALK;
 
-		treasureRooms = dedale.getTreasureRooms(getTreasureType(), excludedRooms);
-
-		int remainingFreeSpace 	= getBackPackFreeSpace();
-		int backpackCapacity   	= getBackpackCapacity();
-		
-		// I/ - Reste t-il des salles de trésors ?
-		if(treasureRooms.isEmpty()) {
-			addLogEntry("no fitting treasure room");
-
-			if(backpackCapacity > remainingFreeSpace) { // a) Rejoindre le tanker si : Le sac est remplie, sa position est connue
-				addLogEntry("my backpack is not empty");
-				lookForTanker();
-			}else {										// b) Sinon explorer pour trouver des salles potentiels
-				addLogEntry("my backpack is empty");
-				if(dedale.isExplored())
-					strategy = Strategy.RANDOM_WALK;
-				else
-					strategy = Strategy.EXPLORATION;
-			}
-		// II/ - Si oui, est-il intéressant d'aller ou mieux vaut chercher le tanker ? 
 		}else {
-			addLogEntry("fitting treasure room available : " + treasureRooms);
+			Set<String> 			excludedRooms = getBlockedRooms();
+			excludedRooms.add(getCurrentRoom());
 
-			// a) Si la capacité restante du robot permet de récupérer en entier un trésor (ou que son sac est vide), on l'ajoute aux cibles potentiels
-			TreeMap<Integer, String> optimalRooms = new TreeMap<Integer, String>();
-			for(Map.Entry<String, Integer> treasureRoom:treasureRooms.entrySet()) {
-				String 	id 		= treasureRoom.getKey();
-				int		value	= treasureRoom.getValue();
-				if(value <= remainingFreeSpace || remainingFreeSpace == backpackCapacity) {
-					optimalRooms.put(Math.abs(value-remainingFreeSpace),id);	// La salle dont la valeur se rapproche le plus de la capacité restante
+			Map<String, Integer> 	treasureRooms = dedale.getTreasureRooms(getTreasureType(), excludedRooms);
+
+			int remainingFreeSpace 	= getBackPackFreeSpace();
+			int backpackCapacity   	= getBackpackCapacity();
+			
+			if(treasureRooms.isEmpty()) {
+				addLogEntry("no fitting treasure room");
+
+				if(!isBackpackEmpty()) { 
+					addLogEntry("my backpack is not empty");
+					lookForTanker();
+				}else {										
+					addLogEntry("my backpack is empty");
+					if(!dedale.isExplored())
+						strategy = Strategy.EXPLORATION;
+				}
+			}else {
+				addLogEntry("fitting treasure room available : " + treasureRooms);
+
+				// a) Si la capacité restante du robot permet de récupérer en entier un trésor (ou que son sac est vide), on l'ajoute aux cibles potentiels
+				TreeMap<Integer, String> optimalRooms = new TreeMap<Integer, String>();
+				for(Map.Entry<String, Integer> treasureRoom:treasureRooms.entrySet()) {
+					String 	id 		= treasureRoom.getKey();
+					int		value	= treasureRoom.getValue();
+					if(value <= remainingFreeSpace || remainingFreeSpace == backpackCapacity)
+						optimalRooms.put(Math.abs(value-remainingFreeSpace),id);	// La salle dont la valeur se rapproche le plus de la capacité restante
+				}
+
+				if(optimalRooms.isEmpty()) {
+					addLogEntry("fitting treasure rooms are available, but my remaining capacity is too low");
+					lookForTanker();
+				}else {
+					strategy = Strategy.TREASURE_HUNT;
 				}
 			}
-
-			if(optimalRooms.isEmpty()) {
-				addLogEntry("fitting treasure rooms are available, but my remaining capacity is too low");
-				lookForTanker();
-			}else {
-				strategy = Strategy.TREASURE_HUNT;
-			}
 		}
+
 		addLogEntry("Strategy : " + strategy);
 		trace("STRATEGY", false);
 		return strategy;
@@ -90,7 +89,7 @@ public class CollectorAgent extends AbstractAgent {
 
 	@Override
 	public boolean isGoalReached() {
-		if( dedale.isExplored() & dedale.getTreasureRooms(getTreasureType()).isEmpty() & isBackpackEmpty()){
+		if( dedale.isExplored() && dedale.getTreasureRooms(getTreasureType()).isEmpty() && isBackpackEmpty()){
 			if(bIsGoalReached == false) goalReached();
 			return true;
 		}

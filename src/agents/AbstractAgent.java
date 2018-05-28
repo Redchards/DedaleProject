@@ -455,6 +455,11 @@ public abstract class AbstractAgent extends abstractAgent {
 	public TreasureType getTreasureType() {
 		return TreasureType.fromValue(getMyTreasureType());
 	}
+	
+	public void clearKnownNearAgents() {
+		knownNearAgents.clear();
+	}
+
 	// ===========================
 	// ===== PRIVATE METHODS =====
 	// ===========================
