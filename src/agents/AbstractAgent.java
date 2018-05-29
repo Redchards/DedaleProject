@@ -323,8 +323,6 @@ public abstract class AbstractAgent extends abstractAgent {
 	// Return true if prioritary compare to the other agent.
 	public boolean computePriority(State agent) {
 		
-		if(strategy == Strategy.IDLE || plannedMoves.isEmpty() || bIsGoalReached)
-			return false;
 		
 
 		boolean	res		= false;
@@ -335,6 +333,12 @@ public abstract class AbstractAgent extends abstractAgent {
 		
 		DeadlockState	myDeadlockState		= getDeadlockState();
 		DeadlockState	agentDeadlockState	= agent.deadlockState;
+
+		if( (strategy == Strategy.IDLE || plannedMoves.isEmpty() || bIsGoalReached ) && (myDeadlockState != DeadlockState.HARD_BLOCKED && myDeadlockState != DeadlockState.SOFT_BLOCKED))
+			return false;
+
+		if((agent.strategy == Strategy.IDLE || agent.plannedMoves.isEmpty() || agent.isGoalReached) && (agentDeadlockState != DeadlockState.HARD_BLOCKED && agentDeadlockState != DeadlockState.SOFT_BLOCKED))
+			return true;
 		
 		// I/ Qui est prioritaire si on ne compare que la priorité des agents
 		comp = myPriority - agentPriority;
@@ -746,20 +750,24 @@ public abstract class AbstractAgent extends abstractAgent {
 		public String 			currentPosition;
 		public String 			nextMove;
 		public String 			destination;
+		public Strategy 		strategy;
+		public boolean 			isGoalReached;
 		public Stack<String> 	plannedMoves;
 		public int 				priority;
 		public DeadlockState	deadlockState;
 		
 		public State(AbstractAgent A) {
-			this.agentAID 			= A.getAID();
-			this.agentType 			= A.getType();
-			this.agentName 			= A.getLocalName();
-			this.currentPosition 	= A.getCurrentRoom();
-			this.nextMove			= A.getNextMove();
-			this.destination		= A.getDestination();
-			this.plannedMoves		= A.getPlannedMoves();
-			this.priority			= A.getPriority();
-			this.deadlockState		= A.getDeadlockState();
+			agentAID 			= A.getAID();
+			agentType 			= A.getType();
+			agentName 			= A.getLocalName();
+			currentPosition 	= A.getCurrentRoom();
+			nextMove			= A.getNextMove();
+			destination			= A.getDestination();
+			strategy			= A.getCurrentStrategy();
+			isGoalReached		= A.bIsGoalReached;
+			plannedMoves		= A.getPlannedMoves();
+			priority			= A.getPriority();
+			deadlockState		= A.getDeadlockState();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -770,6 +778,8 @@ public abstract class AbstractAgent extends abstractAgent {
 			currentPosition	= ois.readUTF();
 			nextMove		= ois.readUTF();
 			destination		= ois.readUTF();
+			strategy		= Strategy.fromValue(ois.readUTF());
+			isGoalReached	= ois.readBoolean();
 			plannedMoves	= (Stack<String>) ois.readObject();
 			priority		= ois.readInt();
 			deadlockState	= DeadlockState.fromValue(ois.readUTF());
@@ -782,6 +792,8 @@ public abstract class AbstractAgent extends abstractAgent {
 			oos.writeUTF(currentPosition);
 			oos.writeUTF(nextMove);
 			oos.writeUTF(destination);
+			oos.writeUTF(strategy.getValue());
+			oos.writeBoolean(isGoalReached);
 	    	oos.writeObject(plannedMoves);
 	    	oos.writeInt(priority);
 	    	oos.writeUTF(deadlockState.getValue());
