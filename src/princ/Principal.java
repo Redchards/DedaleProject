@@ -39,7 +39,7 @@ public class Principal {
 		LogManager.getLogManager().reset();
 
 		// Selection du scenario
-		SCENARIO choice = SCENARIO.E2T1C5_2017;
+		SCENARIO choice = SCENARIO.SOUTENANCE;
 		scenario= new Scenario(choice);
 
 		//0) Create the real environment and the observed one
@@ -196,7 +196,7 @@ public class Principal {
 		c = containerList.get(scenario.explorerAgentsContainer);
 		// --- Explorer
 		for(int i=0; i<scenario.numberOfExplorerAgents;i++) {
-			agentName= scenario.explorerAgentsNamePrefix + Integer.toString(i);
+			agentName= scenario.explorerAgentsNamePrefix + Integer.toString(i+1);
 			try {
 				Object[] explorerAgentsParameters	= new Object[]{env,
 						EntityType.AGENT_EXPLORER,
@@ -213,7 +213,7 @@ public class Principal {
 		// --- Tanker
 		c = containerList.get(scenario.tankerAgentsContainer);
 		for(int i=0; i<scenario.numberOfTankerAgents;i++) {
-			agentName= scenario.tankerAgentsNamePrefix + Integer.toString(i);
+			agentName= scenario.tankerAgentsNamePrefix;
 			try {
 				Object[] tankerAgentsParameters	= new Object[]{env,
 						EntityType.AGENT_TANKER,
@@ -230,7 +230,10 @@ public class Principal {
 		// --- Collector 
 		c = containerList.get(scenario.collectorAgentsContainer);
 		for(int i=0; i<scenario.numberOfCollectorAgents;i++) {
-			agentName= scenario.collectorAgentsNamePrefix + Integer.toString(i);
+			if( i==3 )
+				agentName= scenario.collectorAgentsNamePrefix + "D1";
+			else
+				agentName= scenario.collectorAgentsNamePrefix + "T" + Integer.toString(i+1);
 			try {
 				Object[] collectorAgentsParameters	= new Object[]{env,
 						EntityType.AGENT_COLLECTOR,

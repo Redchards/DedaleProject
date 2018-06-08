@@ -270,6 +270,8 @@ public class DeadlockBehaviour extends AbstractFSMBehaviour {
 
 		myAgent.overrideNextMoves((nextMoves.isEmpty()) ? myAgent.getPlannedMoves() : nextMoves);
 
+		lastPos = myAgent.getCurrentRoom();
+
 		myAgent.clearKnownNearAgents();
 
 		myAgent.addLogEntry("outcome 	: " + outcome);

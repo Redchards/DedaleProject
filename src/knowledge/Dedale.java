@@ -246,12 +246,14 @@ public class Dedale implements Serializable {
 				paths.put((int) dijkstra.getPathLength(node), node);
 			}
 
-			Node nearestNode = paths.get(paths.firstKey());
-			for (Node node : dijkstra.getPathNodes(nearestNode)) {
-				path.push(node.getId());
+			if(!paths.isEmpty()) {
+				Node nearestNode = paths.get(paths.firstKey());
+				for (Node node : dijkstra.getPathNodes(nearestNode)) {
+					path.push(node.getId());
+				}
+				if(!path.isEmpty())
+					path.pop(); // Enleve le noeud actuelle du plan
 			}
-			if(!path.isEmpty())
-				path.pop(); // Enleve le noeud actuelle du plan
 
 			dijkstra.clear();
 		}
